@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP MQTT CONNECTION</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/main.css">
+
+</head>
+<body>
+    <h1>ESP MQTT CONNECTION</h1>
+
+    <div class="connection-form">
+        <input type="text" id="topic" placeholder="Topic">
+        <input type="text" id="ipAddress" placeholder="Adres IP">
+        <button id="connectButton" onclick="connectToBroker()">Connect</button>
+    </div>
+    
+    
+    <div class="chartsbox">
+        <div class="chart-container">
+            <canvas id="lineChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        function connectToBroker() {
+            const topic = document.getElementById("topic").value;
+            const ipAddress = document.getElementById("ipAddress").value;
+
+            socket.emit('connect_to_broker', { topic, ipAddress });
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const MAX_DATA_COUNT = 10;
+            const ctx = document.getElementById("lineChart").getContext("2d");
+            const lineChart = configureChart(ctx, "Data", "rgba(102, 255, 255, 0.5)", "rgb(102, 255, 255)");
+
+            socket.on('message', function (data) {
+                console.log('Received message from server:', data);
+
+                const exampleMsg = {
+                    date: new Date().toLocaleTimeString(),
+                    value: parseFloat(data["Sensor Value"]).toFixed(1)
+                };
+
+                handleSocketData(lineChart, exampleMsg);
+            });
+            function configureChart(ctx, label, backgroundColor, borderColor) {
+                return new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: label,
+                            backgroundColor: backgroundColor,
+                            borderColor: borderColor,
+                            data: [], 
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'white',
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                    },
+                });
+            }
+
+            function addData(lineChart, label, data) {
+                lineChart.data.labels.push(label);
+                lineChart.data.datasets.forEach((dataset) => {
+                    dataset.data.push(data);
+                });
+                lineChart.update();
+            }
+
+            function removeFirstData(lineChart) {
+                lineChart.data.labels.splice(0, 1);
+                lineChart.data.datasets.forEach((dataset) => {
+                    dataset.data.shift();
+                });
+                lineChart.update();
+            }
+
+            function handleSocketData(lineChart, msg) {
+                console.log(`Otrzymano dane z czujnika :: ${msg.date} :: ${msg.value}`);
+
+                if (lineChart.data.labels.length > MAX_DATA_COUNT) {
+                    removeFirstData(lineChart);
+                }
+                addData(lineChart, msg.date, msg.value);
+
+                while (lineChart.data.labels.length > MAX_DATA_COUNT) {
+                    removeFirstData(lineChart);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
