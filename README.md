@@ -13,9 +13,4 @@ node -v # should print `v20.13.0`
 # verifies the right NPM version is in the environment
 npm -v # should print `10.5.2`
 
-
-git clone https://github.com/Szczerku/ESP_MQTT.git
-cd ESP_MQTT/
-npm install
-npm start
-run on your web browser: localhost:8080
+git clone https://github.com/Szczerku/ESP_MQTT.git\ncd ESP_MQTT/\nnpm install\nnpm start\nrun on your web browser: [localhost:8080](http://localhost:8080)
