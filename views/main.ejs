@@ -45,7 +45,7 @@
 
                 const exampleMsg = {
                     date: new Date().toLocaleTimeString(),
-                    value: parseFloat(data["Sensor Value"]).toFixed(1)
+                    value: parseFloat(data["sensor_value"]).toFixed(1)
                 };
 
                 handleSocketData(lineChart, exampleMsg);
